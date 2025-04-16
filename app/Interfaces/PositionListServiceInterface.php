@@ -3,9 +3,9 @@
 namespace App\Interfaces;
 
 use App\Dto\GetPositionListDto;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface PositionListServiceInterface
 {
-    public function getPositionList(GetPositionListDto $dto): LengthAwarePaginator;
+    public function getPositionList(GetPositionListDto $dto): Collection;
 }

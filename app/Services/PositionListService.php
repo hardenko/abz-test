@@ -5,18 +5,12 @@ namespace App\Services;
 use App\Dto\GetPositionListDto;
 use App\Interfaces\PositionListServiceInterface;
 use App\Models\Position;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
-final class PositionListService extends SearchQueryService implements PositionListServiceInterface
+final class PositionListService implements PositionListServiceInterface
 {
-    private const ITEMS_PER_PAGE = 20;
-
-    public function getPositionList(GetPositionListDto $dto): LengthAwarePaginator
+    public function getPositionList(GetPositionListDto $dto): Collection
     {
-        $query = Position::query();
-
-        $this->applyWhere(query: $query, field: 'name', value: $dto->name, operator: 'LIKE', wildcard: true);
-
-        return $query->paginate(self::ITEMS_PER_PAGE);
+        return Position::all();
     }
 }

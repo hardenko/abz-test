@@ -14,6 +14,6 @@ final class User extends Model
 
     public function positionRelation(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(Position::class, 'position_id', 'id');
     }
 }

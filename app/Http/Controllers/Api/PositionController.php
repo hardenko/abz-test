@@ -17,6 +17,8 @@ class PositionController extends BaseApiController
     {
         $response = $this->service->getPositionList(GetPositionListDto::fromArray($request->all()));
 
-        return $this->response('successfully_got_position_list', PositionListResource::collection($response));
+        return $this->successResponse([
+            'positions' => PositionListResource::collection($response)
+        ]);
     }
 }
