@@ -2,7 +2,10 @@
 
 namespace App\Http\Request;
 
+use App\Rules\MaxImageSizeInMb;
 use App\Rules\MinImageSize;
+use App\Rules\ValidImageMime;
+use App\Rules\ValidPhone;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class CreateUserRequest extends FormRequest
@@ -22,7 +25,7 @@ final class CreateUserRequest extends FormRequest
             ],
             'phone' => [
                 'required',
-                'regex:/^\+380\d{9}$/',
+                new ValidPhone(),
             ],
             'position_id' => [
                 'required',
@@ -32,8 +35,8 @@ final class CreateUserRequest extends FormRequest
             'photo' => [
                 'required',
                 'image',
-                'mimes:jpg,jpeg',
-                'max:5120',
+                new ValidImageMime(),
+                new MaxImageSizeInMb(),
                 new MinImageSize(),
             ],
         ];
@@ -47,8 +50,9 @@ final class CreateUserRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.min' => 'The name must be at least 2 characters.',
+            'position_id.integer' => 'The position id must be an integer.',
             'email.email' => 'The email must be a valid email address.',
-            'photo.max' => 'The photo may not be greater than 5 Mbytes.',
         ];
     }
 }

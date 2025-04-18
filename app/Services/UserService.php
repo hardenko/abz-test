@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Dto\GetUserListDto;
-use App\Interfaces\UserListServiceInterface;
+use App\Interfaces\UserServiceInterface;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-final class UserListService implements UserListServiceInterface
+final class UserService implements UserServiceInterface
 {
     public function getUserList(GetUserListDto $dto): LengthAwarePaginator
     {
@@ -17,5 +17,18 @@ final class UserListService implements UserListServiceInterface
     public function getUserById(int $id): User
     {
         return User::with('positionRelation')->findOrFail($id);
+    }
+
+    public function emailOrPhoneExists(string $email, string $phone): bool
+    {
+        return User::where('email', $email)->orWhere('phone', $phone)->exists();
+    }
+
+    public function createUser(array $data, string $photoPath): User
+    {
+        return User::create([
+            ...$data,
+            'photo' => $photoPath,
+        ]);
     }
 }

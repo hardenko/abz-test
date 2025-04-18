@@ -5,46 +5,43 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Request\CreateUserRequest;
 use App\Http\Request\UserListRequest;
-use App\Interfaces\UserListServiceInterface;
-use App\Services\TokenValidatorService;
-use App\Services\PhotoStorageService;
-use App\Services\UserCreatorService;
 use App\Dto\GetUserListDto;
 use App\Resources\UserByIdResource;
 use App\Resources\UserListResource;
+use App\Services\PhotoStorageService;
+use App\Services\TokenService;
+use App\Services\UserService;
 use App\Support\ApiResponseBuilder;
 use Illuminate\Http\JsonResponse;
 
-class UserController extends BaseApiController
+final class UserController extends BaseApiController
 {
     public function __construct(
-        private readonly UserListServiceInterface $service,
-        private readonly TokenValidatorService $tokenService,
+        private readonly UserService         $userService,
         private readonly PhotoStorageService $photoService,
-        private readonly UserCreatorService $userService
-    ) {}
+        private readonly TokenService        $tokenService,
+    ){}
 
     public function getUserList(UserListRequest $request): JsonResponse
     {
-        $response = $this->service->getUserList(GetUserListDto::fromArray($request->all()));
+        $dto = GetUserListDto::fromArray($request->validated());
+        $users = $this->userService->getUserList($dto);
 
-        return ApiResponseBuilder::paginated(UserListResource::collection($response), 'users');
+        return ApiResponseBuilder::paginated(UserListResource::collection($users), 'users');
     }
 
     public function getUserById(int $id): JsonResponse
     {
-        $user = $this->service->getUserById($id);
+        $user = $this->userService->getUserById($id);
 
-        return $this->successResponse([
-            'user' => new UserByIdResource($user)
-        ]);
+        return $this->successResponse(['user' => new UserByIdResource($user)]);
     }
 
     public function createUser(CreateUserRequest $request): JsonResponse
     {
         $token = $request->bearerToken();
 
-        if (! $this->tokenService->validateOnce($token)) {
+        if (!$this->tokenService->validateOnce($token)) {
             return $this->failResponse('The token expired.', 401);
         }
 
@@ -55,8 +52,7 @@ class UserController extends BaseApiController
         }
 
         $photoPath = $this->photoService->store($request->file('photo'));
-
-        $user = $this->userService->create($validated, $photoPath);
+        $user = $this->userService->createUser($validated, $photoPath);
 
         return $this->successResponse([
             'user_id' => $user->id,
