@@ -9,13 +9,13 @@ use App\Interfaces\PositionListServiceInterface;
 use App\Resources\PositionListResource;
 use Illuminate\Http\JsonResponse;
 
-class PositionController extends BaseApiController
+final class PositionController extends BaseApiController
 {
     public function __construct(private readonly PositionListServiceInterface $service){}
 
-    public function getPositionList(PositionListRequest $request): JsonResponse
+    public function list(PositionListRequest $request): JsonResponse
     {
-        $response = $this->service->getPositionList(GetPositionListDto::fromArray($request->all()));
+        $response = $this->service->list(GetPositionListDto::fromArray($request->all()));
 
         return $this->successResponse([
             'positions' => PositionListResource::collection($response)

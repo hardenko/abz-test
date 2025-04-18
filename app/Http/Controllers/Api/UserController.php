@@ -6,57 +6,48 @@ use App\Http\Controllers\BaseApiController;
 use App\Http\Request\CreateUserRequest;
 use App\Http\Request\UserListRequest;
 use App\Dto\GetUserListDto;
-use App\Resources\UserByIdResource;
-use App\Resources\UserListResource;
-use App\Services\PhotoStorageService;
-use App\Services\TokenService;
-use App\Services\UserService;
-use App\Support\ApiResponseBuilder;
+use App\Interfaces\UserServiceInterface;
+use App\Resources\UserCollection;
+use App\Resources\UserResource;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 
 final class UserController extends BaseApiController
 {
     public function __construct(
-        private readonly UserService         $userService,
-        private readonly PhotoStorageService $photoService,
-        private readonly TokenService        $tokenService,
+        private readonly UserServiceInterface $userService,
     ){}
 
-    public function getUserList(UserListRequest $request): JsonResponse
+    public function list(UserListRequest $request): UserCollection
     {
         $dto = GetUserListDto::fromArray($request->validated());
-        $users = $this->userService->getUserList($dto);
+        $users = $this->userService->list($dto);
 
-        return ApiResponseBuilder::paginated(UserListResource::collection($users), 'users');
+        return new UserCollection($users);
     }
 
-    public function getUserById(int $id): JsonResponse
+    public function user(int $id): JsonResponse
     {
-        $user = $this->userService->getUserById($id);
+        $user = $this->userService->user($id);
 
-        return $this->successResponse(['user' => new UserByIdResource($user)]);
+        return $this->successResponse(['user' => new UserResource($user)]);
     }
 
-    public function createUser(CreateUserRequest $request): JsonResponse
+    public function create(CreateUserRequest $request): JsonResponse
     {
-        $token = $request->bearerToken();
+        try {
+            $user = $this->userService->create($request->toDto());
 
-        if (!$this->tokenService->validateOnce($token)) {
-            return $this->failResponse('The token expired.', 401);
+            return $this->successResponse([
+                'user_id' => $user->id,
+                'message' => 'New user successfully registered',
+            ], 201);
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23505') {
+                return $this->failResponse('User with this phone or email already exist', 409);
+            }
+
+            throw $e;
         }
-
-        $validated = $request->validated();
-
-        if ($this->userService->emailOrPhoneExists($validated['email'], $validated['phone'])) {
-            return $this->failResponse('User with this phone or email already exist', 409);
-        }
-
-        $photoPath = $this->photoService->store($request->file('photo'));
-        $user = $this->userService->createUser($validated, $photoPath);
-
-        return $this->successResponse([
-            'user_id' => $user->id,
-            'message' => 'New user successfully registered',
-        ], 201);
     }
 }

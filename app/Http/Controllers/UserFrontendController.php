@@ -6,10 +6,10 @@ use App\Dto\GetPositionListDto;
 use App\Dto\GetUserListDto;
 use App\Http\Request\CreateUserRequest;
 use App\Interfaces\PositionListServiceInterface;
-use App\Services\PhotoStorageService;
+use App\Resources\UserResource;
+use App\Services\ImageService;
 use App\Services\TokenService;
 use App\Services\UserService;
-use App\Resources\UserListResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,7 +20,7 @@ final class UserFrontendController extends Controller
         private readonly UserService                  $userService,
         private readonly PositionListServiceInterface $positionService,
         private readonly TokenService                 $tokenService,
-        private readonly PhotoStorageService          $photoService,
+        private readonly ImageService                 $photoService,
     ){}
 
     public function getUserList(Request $request): View
@@ -30,12 +30,12 @@ final class UserFrontendController extends Controller
             count: 6
         );
 
-        $users = $this->userService->getUserList($dto);
-        $positions = $this->positionService->getPositionList(GetPositionListDto::fromArray([]));
-        $token = $this->tokenService->generateToken();
+        $users = $this->userService->list($dto);
+        $positions = $this->positionService->list(GetPositionListDto::fromArray([]));
+        $token = $this->tokenService->generate();
 
         return view('users', [
-            'users' => UserListResource::collection($users)->resolve(),
+            'users' => UserResource::collection($users)->resolve(),
             'pagination' => [
                 'page' => $users->currentPage(),
                 'total_pages' => $users->lastPage(),
@@ -66,7 +66,7 @@ final class UserFrontendController extends Controller
             ])->withInput();
         }
 
-        $this->userService->createUser($validated, $this->photoService->store($request->file('photo')));
+        $this->userService->create($validated, $this->photoService->store($request->file('photo')));
 
         return redirect('/')->with('success', 'New user successfully registered');
     }

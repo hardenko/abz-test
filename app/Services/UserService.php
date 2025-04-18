@@ -2,19 +2,31 @@
 
 namespace App\Services;
 
+use App\Dto\CreateUserDto;
 use App\Dto\GetUserListDto;
+use App\Exceptions\PageNotFoundException;
 use App\Interfaces\UserServiceInterface;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-final class UserService implements UserServiceInterface
+final readonly class UserService implements UserServiceInterface
 {
-    public function getUserList(GetUserListDto $dto): LengthAwarePaginator
+    public function __construct(
+        private ImageService $imageService,
+    ) {}
+    public function list(GetUserListDto $dto): LengthAwarePaginator
     {
-        return User::with('positionRelation')->paginate($dto->count, ['*'], 'page', $dto->page);
+        $users = User::with('positionRelation')
+            ->paginate($dto->count, ['*'], 'page', $dto->page);
+
+        if ($users->isEmpty() && $dto->page > $users->lastPage()) {
+            throw new PageNotFoundException();
+        }
+
+        return $users;
     }
 
-    public function getUserById(int $id): User
+    public function user(int $id): User
     {
         return User::with('positionRelation')->findOrFail($id);
     }
@@ -24,10 +36,12 @@ final class UserService implements UserServiceInterface
         return User::where('email', $email)->orWhere('phone', $phone)->exists();
     }
 
-    public function createUser(array $data, string $photoPath): User
+    public function create(CreateUserDto $dto): User
     {
+        $photoPath = $this->imageService->store($dto->photo);
+
         return User::create([
-            ...$data,
+            ...$dto->toArray(),
             'photo' => $photoPath,
         ]);
     }

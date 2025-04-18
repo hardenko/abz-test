@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use function Tinify\fromFile;
 use function Tinify\setKey;
 
-class PhotoStorageService
+final class ImageService
 {
     public function store(UploadedFile $file): string
     {

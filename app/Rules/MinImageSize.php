@@ -8,6 +8,9 @@ use Illuminate\Http\UploadedFile;
 
 final readonly class MinImageSize implements ValidationRule
 {
+    private const MIN_WIDTH = 70;
+    private const MIN_HEIGHT = 70;
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!($value instanceof UploadedFile)) {
@@ -24,8 +27,8 @@ final readonly class MinImageSize implements ValidationRule
 
         [$width, $height] = $dimensions;
 
-        if ($width < 70 || $height < 70) {
-            $fail('The photo must be at least 70x70 pixels.');
+        if ($width < self::MIN_WIDTH || $height < self::MIN_HEIGHT) {
+            $fail("The photo must be at least " . self::MIN_WIDTH . "x" . self::MIN_HEIGHT . " pixels.");
         }
     }
 }

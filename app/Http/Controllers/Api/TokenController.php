@@ -10,9 +10,9 @@ final class TokenController extends BaseApiController
 {
     public function __construct(private readonly TokenService $tokenService) {}
 
-    public function generateToken(): JsonResponse
+    public function generate(): JsonResponse
     {
-        $token = $this->tokenService->generateToken();
+        $token = $this->tokenService->generate();
 
         return $this->successResponse([
             'token' => $token

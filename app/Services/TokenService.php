@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 final class TokenService
 {
-    public function generateToken(): string
+    public function generate(): string
     {
         $token = base64_encode(Str::random(128));
 

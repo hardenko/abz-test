@@ -7,5 +7,5 @@ use Illuminate\Support\Collection;
 
 interface PositionListServiceInterface
 {
-    public function getPositionList(GetPositionListDto $dto): Collection;
+    public function list(GetPositionListDto $dto): Collection;
 }

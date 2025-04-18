@@ -2,12 +2,18 @@
 
 use App\Http\Controllers\Api\TokenController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Middleware\ValidateApiToken;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PositionController;
 
-Route::get('users', [UserController::class, 'getUserList']);
-Route::get('user/{id}', [UserController::class, 'getUserById']);
-Route::get('positions', [PositionController::class, 'getPositionList']);
-Route::get('token', [TokenController::class, 'generateToken']);
+Route::prefix('users')->group(function () {
+    Route::get('/', [UserController::class, 'list']);
+    Route::get('/{id}', [UserController::class, 'user']);
+    Route::post('/', [UserController::class, 'create'])->middleware(ValidateApiToken::class);
+});
 
-Route::post('users', [UserController::class, 'createUser']);
+Route::get('positions', [PositionController::class, 'list']);
+
+Route::get('token', [TokenController::class, 'generate']);
+
+
