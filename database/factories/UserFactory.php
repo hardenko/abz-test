@@ -14,7 +14,7 @@ class UserFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => '+380' . $this->faker->numerify('#########'),
             'position_id' => Position::inRandomOrder()->first(),
-            'photo' => 'https://via.placeholder.com/70',
+            'photo' => asset('storage/photos/' . 'user_680130e81a2de.jpg'),
         ];
     }
 }

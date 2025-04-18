@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\BaseApiController;
+use App\Services\TokenService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 final class TokenController extends BaseApiController
 {
+    public function __construct(private readonly TokenService $tokenService) {}
+
     public function generateToken(): JsonResponse
     {
-        $token = base64_encode(Str::random(128));
-
-        Cache::put("auth_token_{$token}", 'valid', now()->addMinutes(40));
+        $token = $this->tokenService->generateToken();
 
         return $this->successResponse([
             'token' => $token
