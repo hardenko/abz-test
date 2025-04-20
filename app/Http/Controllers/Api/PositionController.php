@@ -2,23 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Dto\GetPositionListDto;
 use App\Http\Controllers\BaseApiController;
-use App\Http\Request\PositionListRequest;
-use App\Interfaces\PositionListServiceInterface;
-use App\Resources\PositionListResource;
+use App\Models\Position;
+use App\Resources\PositionResource;
 use Illuminate\Http\JsonResponse;
 
 final class PositionController extends BaseApiController
 {
-    public function __construct(private readonly PositionListServiceInterface $service){}
-
-    public function list(PositionListRequest $request): JsonResponse
+    public function list(): JsonResponse
     {
-        $response = $this->service->list(GetPositionListDto::fromArray($request->all()));
+        $positions = Position::all();
 
         return $this->successResponse([
-            'positions' => PositionListResource::collection($response)
+            'positions' => PositionResource::collection($positions),
         ]);
     }
 }

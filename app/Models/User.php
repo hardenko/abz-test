@@ -12,7 +12,7 @@ final class User extends Model
 
     protected $guarded = ['id'];
 
-    public function positionRelation(): BelongsTo
+    public function positions(): BelongsTo
     {
         return $this->belongsTo(Position::class, 'position_id', 'id');
     }

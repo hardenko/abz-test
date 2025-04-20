@@ -16,7 +16,8 @@ final readonly class UserService implements UserServiceInterface
     ) {}
     public function list(GetUserListDto $dto): LengthAwarePaginator
     {
-        $users = User::with('positionRelation')
+        $users = User::with('positions')
+            ->orderByDesc('created_at')
             ->paginate($dto->count, ['*'], 'page', $dto->page);
 
         if ($users->isEmpty() && $dto->page > $users->lastPage()) {
@@ -28,7 +29,7 @@ final readonly class UserService implements UserServiceInterface
 
     public function user(int $id): User
     {
-        return User::with('positionRelation')->findOrFail($id);
+        return User::with('positions')->findOrFail($id);
     }
 
     public function emailOrPhoneExists(string $email, string $phone): bool

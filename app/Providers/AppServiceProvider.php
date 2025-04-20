@@ -2,9 +2,7 @@
 
 namespace App\Providers;
 
-use App\Interfaces\PositionListServiceInterface;
 use App\Interfaces\UserServiceInterface;
-use App\Services\PositionListService;
 use App\Services\UserService;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,7 +13,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(PositionListServiceInterface::class, PositionListService::class);
         $this->app->bind(UserServiceInterface::class, UserService::class);
     }
 

@@ -13,7 +13,7 @@ final class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'position' => $this->positionRelation->name,
+            'position' => $this->positions->name,
             'position_id' => (string) $this->position_id,
             'registration_timestamp' => strtotime($this->created_at),
             'photo' => $this->photo,
