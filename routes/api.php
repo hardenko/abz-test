@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\PositionController;
 
 Route::prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'list']);
-    Route::get('/{id}', [UserController::class, 'user']);
+    Route::get('/{id}', [UserController::class, 'getById']);
     Route::post('/', [UserController::class, 'create'])->middleware(ValidateApiToken::class);
 });
 

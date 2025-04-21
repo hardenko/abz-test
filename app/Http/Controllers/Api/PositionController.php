@@ -11,10 +11,8 @@ final class PositionController extends BaseApiController
 {
     public function list(): JsonResponse
     {
-        $positions = Position::all();
-
         return $this->successResponse([
-            'positions' => PositionResource::collection($positions),
+            'positions' => PositionResource::collection(Position::all()),
         ]);
     }
 }

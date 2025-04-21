@@ -9,12 +9,12 @@ final class UserResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => (string) $this->id,
+            'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
             'position' => $this->positions->name,
-            'position_id' => (string) $this->position_id,
+            'position_id' => $this->position_id,
             'registration_timestamp' => strtotime($this->created_at),
             'photo' => $this->photo,
         ];

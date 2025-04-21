@@ -12,10 +12,8 @@ final class TokenController extends BaseApiController
 
     public function generate(): JsonResponse
     {
-        $token = $this->tokenService->generate();
-
         return $this->successResponse([
-            'token' => $token
+            'token' =>  $this->tokenService->generate()
         ]);
     }
 }

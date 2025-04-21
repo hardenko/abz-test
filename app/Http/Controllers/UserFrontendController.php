@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Dto\GetUserListDto;
-use App\Http\Request\CreateUserRequest;
+use App\Http\Request\User\CreateUserRequest;
 use App\Models\Position;
 use App\Resources\PositionCollection;
 use App\Services\TokenService;

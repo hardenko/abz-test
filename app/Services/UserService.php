@@ -20,30 +20,26 @@ final readonly class UserService implements UserServiceInterface
             ->orderByDesc('created_at')
             ->paginate($dto->count, ['*'], 'page', $dto->page);
 
-        if ($users->isEmpty() && $dto->page > $users->lastPage()) {
+        if ($dto->page > $users->lastPage()) {
             throw new PageNotFoundException();
         }
 
         return $users;
     }
 
-    public function user(int $id): User
+    public function getById(int $id): User
     {
         return User::with('positions')->findOrFail($id);
     }
 
-    public function emailOrPhoneExists(string $email, string $phone): bool
-    {
-        return User::where('email', $email)->orWhere('phone', $phone)->exists();
-    }
-
     public function create(CreateUserDto $dto): User
     {
-        $photoPath = $this->imageService->store($dto->photo);
-
         return User::create([
-            ...$dto->toArray(),
-            'photo' => $photoPath,
+            'name' => $dto->name,
+            'email' => $dto->email,
+            'phone' => $dto->phone,
+            'position_id' => $dto->position_id,
+            'photo' => $this->imageService->store($dto->photo),
         ]);
     }
 }

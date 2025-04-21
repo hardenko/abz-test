@@ -15,106 +15,133 @@ use PHPUnit\Framework\Attributes\CoversClass;
 final class UserControllerTest extends TestCase
 {
     #[DataProvider('provideCreateUser')]
-    public function testCreateUser($expectedStatus, $expectedResponse): void
+    public function testCreateUser($payload, ?string $token, int $expectedStatus, array $expectedResponse): void
     {
-        $position = Position::factory()->create();
+        if (is_callable($payload)) {
+            $payload = $payload();
+        }
 
-        $token = base64_encode('test-token');
-        Cache::put("auth_token_$token", 'valid', now()->addMinutes(40));
+        $headers = [];
+        if ($token !== null) {
+            $encodedToken = base64_encode($token);
+            Cache::put("auth_token_$encodedToken", 'valid', now()->addMinutes(40));
+            $headers = ['Authorization' => "Bearer $encodedToken"];
+        }
 
-        $payload = [
-            'name' => 'Test',
-            'email' => 'test@example.com',
-            'phone' => '+380500500501',
-            'position_id' => $position->id,
-            'photo' => UploadedFile::fake()->image('avatar.jpg', 100, 100)->size(100),
-        ];
+        $response = $this->postJson('/api/users', $payload, $headers);
 
-        $response = $this->postJson(
-            '/api/users',
-            $payload,
-            ['Authorization' => "Bearer $token"]
-        );
-
-        $response->assertStatus($expectedStatus)
-            ->assertJsonStructure($expectedResponse);
+        if (isset($expectedResponse['exact'])) {
+            $response->assertStatus($expectedStatus)
+                ->assertExactJson($expectedResponse['exact']);
+        } else {
+            $response->assertStatus($expectedStatus)
+                ->assertJsonStructure($expectedResponse['structure']);
+        }
     }
 
     #[DataProvider('provideGetUserList')]
-    public function testGetUserList($expectedStatus, $expectedResponse): void
+    public function testGetUserList(int $usersCount, ?array $queryParams, int $expectedStatus, array $expectedResponse): void
     {
         Position::factory()->count(5)->create();
-        User::factory()->count(45)->create();
+        User::factory()->count($usersCount)->create();
 
-        $response = $this->makeCall("/api/users");
+        $url = "/api/users";
+        if ($queryParams) {
+            $url .= '?' . http_build_query($queryParams);
+        }
 
-        $response->assertStatus($expectedStatus)
-            ->assertJsonStructure($expectedResponse);
+        $response = $this->getJson($url);
+
+        if (isset($expectedResponse['exact'])) {
+            $response->assertStatus($expectedStatus)
+                ->assertExactJson($expectedResponse['exact']);
+        } else {
+            $response->assertStatus($expectedStatus)
+                ->assertJsonStructure($expectedResponse['structure']);
+        }
     }
 
     #[DataProvider('provideGetUser')]
-    public function testGetUser($expectedStatus, $expectedResponse): void
+    public function testGetUser($userId, int $expectedStatus, array $expectedResponse): void
     {
-        Position::factory()->create();
+        if ($userId === 'exists') {
+            Position::factory()->create();
+            $user = User::factory()->create();
+            $userId = $user->id;
+        }
 
-        $user = User::factory()->create();
+        $response = $this->getJson("/api/users/$userId");
 
-        $response = $this->makeCall("/api/users/$user->id",
-        );
-
-        $response->assertStatus($expectedStatus)
-            ->assertJsonStructure($expectedResponse);
-    }
-
-    #[DataProvider('provideUserListNotFoundPage')]
-    public function testUserListNotFoundPage($payload, $expectedStatus, $expectedResponse): void
-    {
-        $response = $this->makeCall(
-            "/api/users",
-            $payload,
-        );
-
-        $response->assertStatus($expectedStatus)
-            ->assertExactJson($expectedResponse);
-    }
-
-    #[DataProvider('provideUserListValidationFail')]
-    public function testUserListValidationFail($payload, $expectedStatus, $expectedResponse): void
-    {
-        $response = $this->makeCall(
-            "/api/users",
-            $payload,
-        );
-
-        $response->assertStatus($expectedStatus)
-            ->assertExactJson($expectedResponse);
-    }
-
-    #[DataProvider('provideUserNotIntegerId')]
-    public function testUserUserNotIntegerId($expectedStatus, $expectedResponse): void
-    {
-        $response = $this->makeCall("/api/users/a");
-
-        $response->assertStatus($expectedStatus)
-            ->assertExactJson($expectedResponse);
-    }
-
-    #[DataProvider('provideUserNotFoundId')]
-    public function testUserNotFoundId($expectedStatus, $expectedResponse): void
-    {
-
-        $response = $this->makeCall("/api/users/100000");
-
-        $response->assertStatus($expectedStatus)
-            ->assertExactJson($expectedResponse);
+        if (isset($expectedResponse['exact'])) {
+            $response->assertStatus($expectedStatus)
+                ->assertExactJson($expectedResponse['exact']);
+        } else {
+            $response->assertStatus($expectedStatus)
+                ->assertJsonStructure($expectedResponse['structure']);
+        }
     }
 
     public static function provideCreateUser(): array
     {
         return [
-            'create user status 201' => [
+            'success - valid data' => [
+                'payload' => function () {
+                    $position = Position::factory()->create();
+
+                    return [
+                        'name' => 'Test User',
+                        'email' => 'test@example.com',
+                        'phone' => '+380500500501',
+                        'position_id' => $position->id,
+                        'photo' => UploadedFile::fake()->image('avatar.jpg', 100, 100)->size(100),
+                    ];
+                },
+                'token' => 'test-token',
                 'expectedStatus' => 201,
-                'expectedResponse' => self::successCreateUserResponse(),
+                'expectedResponse' => [
+                    'structure' => [
+                        "success",
+                        "user_id",
+                        "message",
+                    ]
+                ]
+            ],
+            'failure - missing required fields' => [
+                'payload' => [
+                    'name' => 'Test User',
+                    // Missing email, phone, position_id, photo
+                ],
+                'token' => 'test-token',
+                'expectedStatus' => 422,
+                'expectedResponse' => [
+                    'exact' => [
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'fails' => [
+                            'email' => ['The email field is required.'],
+                            'phone' => ['The phone field is required.'],
+                            'position_id' => ['The position id field is required.'],
+                            'photo' => ['The photo field is required.'],
+                        ]
+                    ]
+                ]
+            ],
+            'failure - invalid auth token' => [
+                'payload' => [
+                    'name' => 'Test User',
+                    'email' => 'test@example.com',
+                    'phone' => '+380500500501',
+                    'position_id' => 1,
+                    'photo' => UploadedFile::fake()->image('avatar.jpg', 100, 100)->size(100),
+                ],
+                'token' => null,
+                'expectedStatus' => 401,
+                'expectedResponse' => [
+                    'exact' => [
+                        'success' => false,
+                        'message' => 'The token expired.'
+                    ]
+                ]
             ],
         ];
     }
@@ -122,9 +149,37 @@ final class UserControllerTest extends TestCase
     public static function provideGetUserList(): array
     {
         return [
-            'get user list status 200 ' => [
+            'success - default parameters' => [
+                'usersCount' => 45,
+                'queryParams' => null,
                 'expectedStatus' => 200,
-                'expectedResponse' => self::successGetUserListResponse(),
+                'expectedResponse' => [
+                    'structure' => self::successGetUserListResponse()
+                ]
+            ],
+            'success - custom page and count' => [
+                'usersCount' => 45,
+                'queryParams' => ['page' => 2, 'count' => 10],
+                'expectedStatus' => 200,
+                'expectedResponse' => [
+                    'structure' => self::successGetUserListResponse()
+                ]
+            ],
+            'failure - page not found' => [
+                'usersCount' => 10,
+                'queryParams' => ['page' => 100],
+                'expectedStatus' => 404,
+                'expectedResponse' => [
+                    'exact' => self::userListNotFoundPageResponse()
+                ]
+            ],
+            'failure - validation fails' => [
+                'usersCount' => 10,
+                'queryParams' => ['page' => 0, 'count' => 'a'],
+                'expectedStatus' => 422,
+                'expectedResponse' => [
+                    'exact' => self::userListValidationFailResponse()
+                ]
             ],
         ];
     }
@@ -132,69 +187,27 @@ final class UserControllerTest extends TestCase
     public static function provideGetUser(): array
     {
         return [
-            'get user status 200 ' => [
+            'success - user exists' => [
+                'userId' => 'exists',
                 'expectedStatus' => 200,
-                'expectedResponse' => self::successGetUserResponse(),
+                'expectedResponse' => [
+                    'structure' => self::successGetUserResponse()
+                ]
             ],
-        ];
-    }
-
-    public static function provideUserListNotFoundPage(): array
-    {
-        return [
-            'not found page status 404' => [
-                'payload' => ['page' => 100],
-                'expectedStatus' => 404,
-                'expectedResponse' => self::userListNotFoundPageResponse(),
-            ],
-        ];
-    }
-
-    public static function provideUserListValidationFail(): array
-    {
-        return [
-            'validation fail status 422' => [
-                'payload' => [
-                    'page' => 0,
-                    'count' => 'a'
-                ],
-                'expectedStatus' => 422,
-                'expectedResponse' => self::userListValidationFailResponse(),
-            ],
-        ];
-    }
-
-    public static function provideUserNotIntegerId(): array
-    {
-        return [
-            'user not integer id status 400' => [
+            'failure - non-integer id' => [
+                'userId' => 'a',
                 'expectedStatus' => 400,
-                'expectedResponse' => self::userNotIntegerIdResponse(),
+                'expectedResponse' => [
+                    'exact' => self::userNotIntegerIdResponse()
+                ]
             ],
-        ];
-    }
-
-    public static function provideUserNotFoundId(): array
-    {
-        return [
-            'user not found id status 404' => [
+            'failure - user not found' => [
+                'userId' => 100000,
                 'expectedStatus' => 404,
-                'expectedResponse' => self::userNotFoundIdResponse(),
+                'expectedResponse' => [
+                    'exact' => self::userNotFoundIdResponse()
+                ]
             ],
-        ];
-    }
-
-    protected function getHttpMethod(): string
-    {
-        return 'GET';
-    }
-
-    private static function successCreateUserResponse(): array
-    {
-        return [
-            "success",
-            "user_id",
-            "message",
         ];
     }
 
