@@ -9,6 +9,10 @@ class PositionSeeder extends Seeder
 {
     public function run(): void
     {
-        Position::factory()->count(5)->create();
+        Position::factory()->create(['name' => 'Frontend developer']);
+        Position::factory()->create(['name' => 'Backend developer']);
+        Position::factory()->create(['name' => 'QA']);
+        Position::factory()->create(['name' => 'PM']);
+        Position::factory()->create(['name' => 'Team Leader']);
     }
 }
