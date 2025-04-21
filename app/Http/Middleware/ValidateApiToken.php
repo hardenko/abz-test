@@ -15,7 +15,7 @@ final readonly class ValidateApiToken
     {
         $token = $request->bearerToken();
 
-        if (!$this->tokenService->validateOnce($token)) {
+        if (! $this->tokenService->validateOnce($token)) {
             return response()->json([
                 'success' => false,
                 'message' => 'The token expired.',

@@ -17,7 +17,7 @@ final class CreateUserRequest extends FormRequest
                 'required',
                 'string',
                 'min:2',
-                'max:60'
+                'max:60',
             ],
             'email' => [
                 'required',
@@ -26,20 +26,20 @@ final class CreateUserRequest extends FormRequest
             ],
             'phone' => [
                 'required',
-                new ValidPhone(),
+                new ValidPhone,
                 Rule::unique('users'),
             ],
             'position_id' => [
                 'required',
                 'integer',
-                'exists:positions,id'
+                'exists:positions,id',
             ],
             'photo' => [
                 'required',
                 'image',
                 'mimes:jpg,jpeg',
                 'max:5120',
-                new MinImageSize(),
+                new MinImageSize,
             ],
         ];
     }

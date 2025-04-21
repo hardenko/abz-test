@@ -16,9 +16,7 @@ final class UserController extends BaseApiController
 {
     public function __construct(
         private readonly UserServiceInterface $userService,
-    )
-    {
-    }
+    ) {}
 
     public function list(UserListRequest $request): UserCollection
     {

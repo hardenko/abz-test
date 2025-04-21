@@ -18,11 +18,10 @@ abstract class BaseApiController extends Controller
             'message' => $message,
         ];
 
-        if (!empty($fails)) {
+        if (! empty($fails)) {
             $response['fails'] = $fails;
         }
 
         return response()->json($response, $status);
     }
 }
-

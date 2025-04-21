@@ -5,6 +5,7 @@ namespace App\Dto;
 final class GetUserListDto extends BaseDto
 {
     public const DEFAULT_PAGE = 1;
+
     public const DEFAULT_COUNT = 5;
 
     public function __construct(

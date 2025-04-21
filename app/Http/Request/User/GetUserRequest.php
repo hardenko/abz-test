@@ -16,7 +16,7 @@ final class GetUserRequest extends FormRequest
                 'bail',
                 'required',
                 'integer',
-                'exists:users,id'
+                'exists:users,id',
             ],
         ];
     }
@@ -46,16 +46,16 @@ final class GetUserRequest extends FormRequest
                     'message' => 'The user with the requested id does not exist.',
                     'fails' => [
                         'userId' => [
-                            'The user ID must be an integer.'
-                        ]
-                    ]
+                            'The user ID must be an integer.',
+                        ],
+                    ],
                 ], Response::HTTP_BAD_REQUEST));
             }
 
             if (in_array('The user with the requested id does not exist.', $errors['id'])) {
                 throw new HttpResponseException(response()->json([
                     'success' => false,
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], Response::HTTP_NOT_FOUND));
             }
         }
@@ -63,7 +63,7 @@ final class GetUserRequest extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Validation failed',
-            'fails' => $errors
+            'fails' => $errors,
         ], Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 }

@@ -12,12 +12,12 @@ final class UserListRequest extends FormRequest
             'page' => [
                 'nullable',
                 'integer',
-                'min:1'
+                'min:1',
             ],
             'count' => [
                 'nullable',
                 'integer',
-                'between:1,100'
+                'between:1,100',
             ],
         ];
     }

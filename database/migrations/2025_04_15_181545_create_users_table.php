@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->foreignId('position_id')->constrained();
             $table->string('photo');
-//            $table->rememberToken();
             $table->timestamps();
         });
 

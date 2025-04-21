@@ -12,5 +12,4 @@ class PositionFactory extends Factory
             'name' => fake()->unique()->jobTitle(),
         ];
     }
-
 }

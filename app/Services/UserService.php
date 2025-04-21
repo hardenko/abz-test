@@ -14,6 +14,7 @@ final readonly class UserService implements UserServiceInterface
     public function __construct(
         private ImageService $imageService,
     ) {}
+
     public function list(GetUserListDto $dto): LengthAwarePaginator
     {
         $users = User::with('positions')
@@ -21,7 +22,7 @@ final readonly class UserService implements UserServiceInterface
             ->paginate($dto->count, ['*'], 'page', $dto->page);
 
         if ($dto->page > $users->lastPage()) {
-            throw new PageNotFoundException();
+            throw new PageNotFoundException;
         }
 
         return $users;

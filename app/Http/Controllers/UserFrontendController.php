@@ -16,14 +16,14 @@ use Illuminate\View\View;
 final class UserFrontendController extends Controller
 {
     public function __construct(
-        private readonly UserService                  $userService,
-        private readonly TokenService                 $tokenService,
-    ){}
+        private readonly UserService $userService,
+        private readonly TokenService $tokenService,
+    ) {}
 
     public function list(Request $request): View
     {
         $dto = new GetUserListDto(
-            page: (int)$request->input('page', 1),
+            page: (int) $request->input('page', 1),
             count: 6
         );
 

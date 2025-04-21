@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Position extends Model
 {
     use HasFactory;
+
     protected $guarded = ['id'];
 
     public function usersRelation(): HasMany

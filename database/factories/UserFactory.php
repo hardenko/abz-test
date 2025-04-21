@@ -12,9 +12,9 @@ class UserFactory extends Factory
         return [
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
-            'phone' => '+380' . $this->faker->numerify('#########'),
+            'phone' => '+380'.$this->faker->numerify('#########'),
             'position_id' => Position::inRandomOrder()->first(),
-            'photo' => asset('storage/photos/' . 'user_680130e81a2de.jpg'),
+            'photo' => asset('storage/photos/'.'user_680130e81a2de.jpg'),
         ];
     }
 }
