@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: abz-test
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://abz-test.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: abz-test-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: abz-test-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: abz-test-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: abz-test-db
+          property: username
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: abz-test-db
+          property: password
+
+databases:
+  - name: abz-test-db
+    plan: free
+    databaseName: abz_test
+    ipAllowList: []
