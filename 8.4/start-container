@@ -9,33 +9,15 @@ if [ ! -z "$WWWUSER" ]; then
     usermod -u $WWWUSER sail
 fi
 
-if [ ! -d /.composer ]; then
-    mkdir /.composer
-fi
-
+mkdir -p /.composer
 chmod -R ugo+rw /.composer
 
-if [ $# -gt 0 ]; then
-    echo "🔁 Running migrations..."
-        php artisan migrate --force
+echo "🔁 Running migrations..."
+php artisan migrate --force
 
-        echo "🌱 Running seeders..."
-        php artisan db:seed --force
+echo "🌱 Running seeders..."
+php artisan db:seed --force
 
-        echo "🚀 Starting Laravel dev server on port ${PORT:-8000}..."
-        exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
-    if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
-        exec "$@"
-    else
-        exec gosu $WWWUSER "$@"
-    fi
-else
-    echo "🔁 Running migrations..."
-    php artisan migrate --force
+echo "🚀 Starting Laravel dev server on port ${PORT:-8000}..."
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
 
-    echo "🌱 Running seeders..."
-    php artisan db:seed --force
-
-    echo "🚀 Starting Laravel dev server on port ${PORT:-8000}..."
-    exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
-fi
