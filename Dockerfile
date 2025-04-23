@@ -60,11 +60,13 @@ RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
 RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 
+COPY . /var/www/html
+
 COPY 8.4/start-container /usr/local/bin/start-container
 COPY 8.4/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY 8.4/php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 
-EXPOSE 10000/tcp
+EXPOSE 10000
 
 ENTRYPOINT ["start-container"]
