@@ -56,14 +56,12 @@ RUN apt-get update && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create explicit symlink for PHP
-RUN ln -sf /usr/bin/php8.4 /usr/bin/php
+RUN ln -sf /usr/bin/php8.4
 
 # Set proper permissions for PHP executable
 RUN chmod +x /usr/bin/php8.4
-RUN chmod +x /usr/bin/php
 
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
-RUN setcap "cap_net_bind_service=+ep" /usr/bin/php
 
 RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
