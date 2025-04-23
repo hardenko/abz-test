@@ -1,0 +1,13 @@
+node_modules
+vendor
+storage/*.key
+.env
+.env.*
+.git
+.gitignore
+.github
+.idea
+.vscode
+tests
+Dockerfile
+docker-compose.yml
