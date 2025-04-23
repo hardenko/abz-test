@@ -11,7 +11,7 @@ WORKDIR /var/www/html
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
-ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
+ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php8.4 -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
 ENV SUPERVISOR_PHP_USER="sail"
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -55,7 +55,15 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Create explicit symlink for PHP
+RUN ln -sf /usr/bin/php8.4 /usr/bin/php
+
+# Set proper permissions for PHP executable
+RUN chmod +x /usr/bin/php8.4
+RUN chmod +x /usr/bin/php
+
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
+RUN setcap "cap_net_bind_service=+ep" /usr/bin/php
 
 RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
@@ -64,8 +72,15 @@ RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 COPY 8.4/start-container /usr/local/bin/start-container
 COPY 8.4/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY 8.4/php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
-RUN chmod +x /usr/local/bin/start-container
+
+# Ensure start-container script has proper permissions
+RUN chmod 755 /usr/local/bin/start-container
 
 EXPOSE 8000/tcp
 
+# Use direct PHP command rather than the script for better debugging
+# Uncomment this line and comment out the ENTRYPOINT below if you want to try this approach
+# ENTRYPOINT ["/usr/bin/php8.4", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+
+# Traditional entrypoint using the start-container script
 ENTRYPOINT ["start-container"]
