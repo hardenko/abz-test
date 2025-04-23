@@ -55,7 +55,6 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
 
 RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
@@ -66,6 +65,6 @@ COPY 8.4/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY 8.4/php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 
-EXPOSE 80/tcp
+EXPOSE 10000/tcp
 
 ENTRYPOINT ["start-container"]
