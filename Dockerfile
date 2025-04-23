@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 LABEL maintainer="Taylor Otwell"
 
-ARG WWWGROUP=1000
+ARG WWWGROUP=10000
 ARG NODE_VERSION=22
 ARG MYSQL_CLIENT="mysql-client"
 ARG POSTGRES_VERSION=17
@@ -55,18 +55,17 @@ RUN apt-get update && apt-get upgrade -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
 
 RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
 RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
-
-COPY . /var/www/html
 
 COPY 8.4/start-container /usr/local/bin/start-container
 COPY 8.4/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY 8.4/php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 
-EXPOSE 10000
+EXPOSE 8000/tcp
 
 ENTRYPOINT ["start-container"]
