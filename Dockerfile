@@ -76,6 +76,8 @@ RUN chmod 777 /usr/local/bin/start-container
 
 EXPOSE 8000/tcp
 
+USER root
+
 #RUN mkdir -p /.composer
 #RUN chmod -R ugo+rw /.composer
 #
