@@ -49,6 +49,7 @@ php artisan key:generate --force\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan migrate --force\n\
+php artisan db:seed --force\n\
 php artisan serve --host=0.0.0.0 --port=${PORT:-8000}\n\
 ' > /var/www/entrypoint.sh && chmod +x /var/www/entrypoint.sh
 
