@@ -72,13 +72,25 @@ COPY 8.4/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY 8.4/php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
 
 # Ensure start-container script has proper permissions
-RUN chmod 755 /usr/local/bin/start-container
+RUN chmod 777 /usr/local/bin/start-container
 
 EXPOSE 8000/tcp
 
+RUN mkdir -p /.composer
+RUN chmod -R ugo+rw /.composer
+
+RUN echo "🔁 Running migrations..."
+RUN /usr/bin/php8.4 artisan migrate --force
+
+RUN echo "🌱 Running seeders..."
+RUN /usr/bin/php8.4 artisan db:seed --force
+
+RUN echo "Starting Laravel dev server on port ${PORT:-8000}..."
+#RUN exec /usr/bin/php8.4 artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+
 # Use direct PHP command rather than the script for better debugging
 # Uncomment this line and comment out the ENTRYPOINT below if you want to try this approach
-# ENTRYPOINT ["/usr/bin/php8.4", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+ ENTRYPOINT ["/usr/bin/php8.4", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 
 # Traditional entrypoint using the start-container script
-ENTRYPOINT ["start-container"]
+#ENTRYPOINT ["start-container"]

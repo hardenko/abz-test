@@ -17,6 +17,6 @@ chmod -R ugo+rw /.composer
 #
 #echo "🌱 Running seeders..."
 #/usr/bin/php8.4 artisan db:seed --force
-#
+
 #echo "🚀 Starting Laravel dev server on port ${PORT:-8000}..."
 #exec /usr/bin/php8.4 artisan serve --host=0.0.0.0 --port=${PORT:-8000}
