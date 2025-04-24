@@ -90,7 +90,7 @@ RUN echo "Starting Laravel dev server on port ${PORT:-8000}..."
 
 # Use direct PHP command rather than the script for better debugging
 # Uncomment this line and comment out the ENTRYPOINT below if you want to try this approach
- ENTRYPOINT ["/usr/bin/php8.4", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 
 # Traditional entrypoint using the start-container script
 #ENTRYPOINT ["start-container"]
