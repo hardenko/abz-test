@@ -1,98 +1,39 @@
-FROM ubuntu:24.04
+FROM php:8.4-cli
 
-LABEL maintainer="Taylor Otwell"
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    postgresql-client
 
-ARG WWWGROUP=10000
-ARG NODE_VERSION=22
-ARG MYSQL_CLIENT="mysql-client"
-ARG POSTGRES_VERSION=17
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /var/www/html
+# Install PHP extensions
+RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
-ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php8.4 -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
-ENV SUPERVISOR_PHP_USER="sail"
+# Get Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Set working directory
+WORKDIR /var/www
 
-RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::BrokenProxy    true;" >> /etc/apt/apt.conf.d/99custom
+# Copy existing application directory
+COPY . /var/www
 
-RUN apt-get update && apt-get upgrade -y \
-    && mkdir -p /etc/apt/keyrings \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano  \
-    && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && apt-get update \
-    && apt-get install -y php8.4-cli php8.4-dev \
-       php8.4-pgsql php8.4-sqlite3 php8.4-gd \
-       php8.4-curl php8.4-mongodb \
-       php8.4-imap php8.4-mysql php8.4-mbstring \
-       php8.4-xml php8.4-zip php8.4-bcmath php8.4-soap \
-       php8.4-intl php8.4-readline \
-       php8.4-ldap \
-       php8.4-msgpack php8.4-igbinary php8.4-redis php8.4-swoole \
-       php8.4-memcached php8.4-pcov php8.4-imagick php8.4-xdebug \
-    && curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y nodejs \
-    && npm install -g npm \
-    && npm install -g pnpm \
-    && npm install -g bun \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /etc/apt/keyrings/yarn.gpg >/dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
-    && curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-    && apt-get update \
-    && apt-get install -y yarn \
-    && apt-get install -y $MYSQL_CLIENT \
-    && apt-get install -y postgresql-client-$POSTGRES_VERSION \
-    && apt-get -y autoremove \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Install dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Create explicit symlink for PHP
-RUN ln -sf /usr/bin/php8.4
+# Set permissions
+RUN chmod +x /var/www/artisan
 
-# Set proper permissions for PHP executable
-RUN chmod +x /usr/bin/php8.4
+# Expose port 8000
+EXPOSE 8000
 
-RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.4
-
-RUN userdel -r ubuntu
-RUN groupadd --force -g $WWWGROUP sail
-RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
-
-COPY 8.4/start-container /usr/local/bin/start-container
-COPY 8.4/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY 8.4/php.ini /etc/php/8.4/cli/conf.d/99-sail.ini
-
-# Ensure start-container script has proper permissions
-RUN chmod 777 /usr/local/bin/start-container
-
-EXPOSE 8000/tcp
-
-USER root
-
-#RUN mkdir -p /.composer
-#RUN chmod -R ugo+rw /.composer
-#
-#RUN echo "🔁 Running migrations..."
-#RUN /usr/bin/php8.4 artisan migrate --force
-#
-#RUN echo "🌱 Running seeders..."
-#RUN /usr/bin/php8.4 artisan db:seed --force
-
-RUN echo "Starting Laravel dev server on port ${PORT:-8000}..."
-#RUN exec /usr/bin/php8.4 artisan serve --host=0.0.0.0 --port=${PORT:-8000}
-
-# Use direct PHP command rather than the script for better debugging
-# Uncomment this line and comment out the ENTRYPOINT below if you want to try this approach
-ENTRYPOINT ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
-
-# Traditional entrypoint using the start-container script
-#ENTRYPOINT ["start-container"]
+# Start PHP server
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
