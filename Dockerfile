@@ -76,14 +76,14 @@ RUN chmod 777 /usr/local/bin/start-container
 
 EXPOSE 8000/tcp
 
-RUN mkdir -p /.composer
-RUN chmod -R ugo+rw /.composer
-
-RUN echo "🔁 Running migrations..."
-RUN /usr/bin/php8.4 artisan migrate --force
-
-RUN echo "🌱 Running seeders..."
-RUN /usr/bin/php8.4 artisan db:seed --force
+#RUN mkdir -p /.composer
+#RUN chmod -R ugo+rw /.composer
+#
+#RUN echo "🔁 Running migrations..."
+#RUN /usr/bin/php8.4 artisan migrate --force
+#
+#RUN echo "🌱 Running seeders..."
+#RUN /usr/bin/php8.4 artisan db:seed --force
 
 RUN echo "Starting Laravel dev server on port ${PORT:-8000}..."
 #RUN exec /usr/bin/php8.4 artisan serve --host=0.0.0.0 --port=${PORT:-8000}
